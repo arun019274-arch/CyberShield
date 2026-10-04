@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>CyberShield SOC Dashboard</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+
+<body>
+
+<div class="container">
+
+
+    <!-- HEADER -->
+
+    <header class="header">
+
+        <div>
+
+            <h1>CyberShield</h1>
+
+            <p>
+                Network Intrusion Detection & Threat Intelligence Platform
+            </p>
+
+        </div>
+
+        <div class="status">
+
+            <span class="status-dot"></span>
+
+            SYSTEM ACTIVE
+
+        </div>
+
+    </header>
+
+
+    <!-- STATISTICS -->
+
+    <section class="stats">
+
+
+        <div class="card">
+
+            <div class="card-title">
+                Total Alerts
+            </div>
+
+            <div class="card-value" id="totalAlerts">
+                {{ total_alerts }}
+            </div>
+
+        </div>
+
+
+        <div class="card critical-card">
+
+            <div class="card-title">
+                Critical
+            </div>
+
+            <div class="card-value" id="criticalAlerts">
+                {{ critical }}
+            </div>
+
+        </div>
+
+
+        <div class="card high-card">
+
+            <div class="card-title">
+                High
+            </div>
+
+            <div class="card-value" id="highAlerts">
+                {{ high }}
+            </div>
+
+        </div>
+
+
+        <div class="card medium-card">
+
+            <div class="card-title">
+                Medium
+            </div>
+
+            <div class="card-value" id="mediumAlerts">
+                {{ medium }}
+            </div>
+
+        </div>
+
+
+        <div class="card low-card">
+
+            <div class="card-title">
+                Low
+            </div>
+
+            <div class="card-value" id="lowAlerts">
+                {{ low }}
+            </div>
+
+        </div>
+
+
+    </section>
+
+
+    <!-- RISK DISTRIBUTION -->
+
+    <section class="panel">
+
+        <div class="panel-header">
+
+            <h2>Risk Distribution</h2>
+
+            <span class="panel-info">
+
+                <span id="riskTotal">
+                    {{ total_alerts }}
+                </span>
+                total alerts
+
+            </span>
+
+        </div>
+
+
+        <!-- CRITICAL -->
+
+        <div class="risk-bar">
+
+            <div class="risk-label">
+
+                <span>Critical</span>
+
+                <strong>
+                    {{ critical }}
+                </strong>
+
+            </div>
+
+            <div class="bar-background">
+
+                <div
+                    class="bar-fill critical-fill"
+                    id="criticalBar">
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- HIGH -->
+
+        <div class="risk-bar">
+
+            <div class="risk-label">
+
+                <span>High</span>
+
+                <strong>
+                    {{ high }}
+                </strong>
+
+            </div>
+
+            <div class="bar-background">
+
+                <div
+                    class="bar-fill high-fill"
+                    id="highBar">
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- MEDIUM -->
+
+        <div class="risk-bar">
+
+            <div class="risk-label">
+
+                <span>Medium</span>
+
+                <strong>
+                    {{ medium }}
+                </strong>
+
+            </div>
+
+            <div class="bar-background">
+
+                <div
+                    class="bar-fill medium-fill"
+                    id="mediumBar">
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- LOW -->
+
+        <div class="risk-bar">
+
+            <div class="risk-label">
+
+                <span>Low</span>
+
+                <strong>
+                    {{ low }}
+                </strong>
+
+            </div>
+
+            <div class="bar-background">
+
+                <div
+                    class="bar-fill low-fill"
+                    id="lowBar">
+                </div>
+
+            </div>
+
+        </div>
+
+
+    </section>
+
+
+    <!-- SECURITY ALERTS -->
+
+    <section class="panel">
+
+
+        <div class="panel-header">
+
+            <div>
+
+                <h2>Security Alerts</h2>
+
+                <p class="panel-subtitle">
+                    Network security events detected by CyberShield
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <!-- SEARCH AND FILTER -->
+
+        <div class="controls">
+
+
+            <input
+                type="text"
+                id="searchBox"
+                class="search-input"
+                placeholder="Search IP, attack type, risk or description..."
+            >
+
+
+            <select
+                id="riskFilter"
+                class="risk-filter"
+            >
+
+                <option value="All">All</option>
+
+                <option value="Critical">Critical</option>
+
+                <option value="High">High</option>
+
+                <option value="Medium">Medium</option>
+
+                <option value="Low">Low</option>
+
+            </select>
+
+
+            <button
+                onclick="clearFilters()"
+                class="clear-button"
+            >
+
+                Clear
+
+            </button>
+
+
+        </div>
+
+
+        <!-- RESULT COUNT -->
+
+        <div class="result-count">
+
+            Showing
+
+            <span id="resultCount">
+                {{ total_alerts }}
+            </span>
+
+            alerts
+
+        </div>
+
+
+        <!-- TABLE -->
+
+        <div class="table-container">
+
+            <table id="alertTable">
+
+
+                <thead>
+
+                    <tr>
+
+                        <th>ID</th>
+
+                        <th>Attack Type</th>
+
+                        <th>Source IP</th>
+
+                        <th>Destination IP</th>
+
+                        <th>Count</th>
+
+                        <th>Risk</th>
+
+                        <th>Description</th>
+
+                    </tr>
+
+                </thead>
+
+
+                <tbody>
+
+
+                    {% for alert in alerts %}
+
+                    <tr
+                        class="alert-row"
+                        data-risk="{{ alert['risk_level'] }}"
+                    >
+
+
+                        <td>
+
+                            {{ alert["id"] }}
+
+                        </td>
+
+
+                        <td>
+
+                            <span class="attack-type">
+
+                                {{ alert["attack_type"] }}
+
+                            </span>
+
+                        </td>
+
+
+                        <td class="ip">
+
+                            {{ alert["source_ip"] }}
+
+                        </td>
+
+
+                        <td class="ip">
+
+                            {{ alert["destination_ip"] }}
+
+                        </td>
+
+
+                        <td>
+
+                            {{ alert["count"] }}
+
+                        </td>
+
+
+                        <td>
+
+                            <span
+                                class="risk {{ alert['risk_level']|lower }}"
+                            >
+
+                                {{ alert["risk_level"] }}
+
+                            </span>
+
+                        </td>
+
+
+                        <td class="description">
+
+                            {{ alert["description"] }}
+
+                        </td>
+
+
+                    </tr>
+
+                    {% endfor %}
+
+
+                </tbody>
+
+
+            </table>
+
+        </div>
+
+
+    </section>
+
+
+    <!-- FOOTER -->
+
+    <footer>
+
+        CyberShield Security Operations Center
+
+        <span>•</span>
+
+        Network Monitoring & Threat Detection
+
+    </footer>
+
+
+</div>
+
+
+<!-- JAVASCRIPT -->
+
+<script>
+
+
+/* ==========================================
+   GET STATISTICS FROM HTML
+   ========================================== */
+
+const total = parseInt(
+    document.getElementById("totalAlerts").textContent
+);
+
+const critical = parseInt(
+    document.getElementById("criticalAlerts").textContent
+);
+
+const high = parseInt(
+    document.getElementById("highAlerts").textContent
+);
+
+const medium = parseInt(
+    document.getElementById("mediumAlerts").textContent
+);
+
+const low = parseInt(
+    document.getElementById("lowAlerts").textContent
+);
+
+
+/* ==========================================
+   RISK BAR CALCULATION
+   ========================================== */
+
+if (total > 0) {
+
+    document.getElementById("criticalBar").style.width =
+        (critical / total * 100) + "%";
+
+    document.getElementById("highBar").style.width =
+        (high / total * 100) + "%";
+
+    document.getElementById("mediumBar").style.width =
+        (medium / total * 100) + "%";
+
+    document.getElementById("lowBar").style.width =
+        (low / total * 100) + "%";
+
+}
+
+
+/* ==========================================
+   SEARCH AND FILTER
+   ========================================== */
+
+const searchBox =
+    document.getElementById("searchBox");
+
+const riskFilter =
+    document.getElementById("riskFilter");
+
+const rows =
+    document.querySelectorAll(".alert-row");
+
+const resultCount =
+    document.getElementById("resultCount");
+
+
+function filterAlerts() {
+
+    const search =
+        searchBox.value.toLowerCase().trim();
+
+    const selectedRisk =
+        riskFilter.value;
+
+    let visible = 0;
+
+
+    rows.forEach(function(row) {
+
+        const rowText =
+            row.textContent.toLowerCase();
+
+        const rowRisk =
+            row.getAttribute("data-risk");
+
+
+        const searchMatch =
+            rowText.includes(search);
+
+
+        const riskMatch =
+            selectedRisk === "All" ||
+            rowRisk === selectedRisk;
+
+
+        if (searchMatch && riskMatch) {
+
+            row.style.display = "";
+
+            visible++;
+
+        }
+
+        else {
+
+            row.style.display = "none";
+
+        }
+
+    });
+
+
+    resultCount.textContent = visible;
+
+}
+
+
+/* ==========================================
+   SEARCH EVENT
+   ========================================== */
+
+searchBox.addEventListener(
+    "input",
+    filterAlerts
+);
+
+
+/* ==========================================
+   RISK FILTER EVENT
+   ========================================== */
+
+riskFilter.addEventListener(
+    "change",
+    filterAlerts
+);
+
+
+/* ==========================================
+   CLEAR BUTTON
+   ========================================== */
+
+function clearFilters() {
+
+    searchBox.value = "";
+
+    riskFilter.value = "All";
+
+    filterAlerts();
+
+}
+
+
+</script>
+
+
+</body>
+
+</html>
